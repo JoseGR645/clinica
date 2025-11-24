@@ -1,0 +1,72 @@
+[
+  {
+    "id": "1",
+    "nombre": "Dr. Jorge Castillo",
+    "especialidad": "Ortodoncia",
+    "experiencia": "15 años de experiencia",
+    "img": "assets/img/doctor.avif"
+  },
+  {
+    "id": "2",
+    "nombre": "Dr. Leonel Sánchez",
+    "especialidad": "Blanqueamiento",
+    "experiencia": "Especialista en blanqueamiento dental",
+    "img": "assets/img/doctor5.jpg"
+  },
+  {
+    "id": "3",
+    "nombre": "Dra. Ana M. Torres",
+    "especialidad": "Limpieza",
+    "experiencia": "Atención a niños y familias",
+    "img": "assets/img/doctora.jpg"
+  },
+  {
+    "id": "4",
+    "nombre": "Dr. Carlos Mendoza",
+    "especialidad": "Implantes",
+    "experiencia": "Procedimientos con guía 3D",
+    "img": "assets/img/doctor2.jpg"
+  },
+  {
+    "id": "5",
+    "nombre": "Dra. Lucía Fernández",
+    "especialidad": "Ortodoncia",
+    "experiencia": "Salud de encías y tejidos",
+    "img": "assets/img/doctora1.jpg"
+  },
+  {
+    "id": "6",
+    "nombre": "Dra. Sofía Rivas",
+    "especialidad": "Blanqueamiento",
+    "experiencia": "Prótesis y restauraciones",
+    "img": "assets/img/doctora2.jpg"
+  },
+  {
+    "id": "7",
+    "nombre": "Dr. Pablo Ramírez",
+    "especialidad": "Limpieza",
+    "experiencia": "Cirugía avanzada y extracciones",
+    "img": "assets/img/doctor3.jpg"
+  },
+  {
+    "id": "8",
+    "nombre": "Dra. Gabriela Salas",
+    "especialidad": "Implantes",
+    "experiencia": "Carillas y diseño de sonrisa",
+    "img": "assets/img/doctora3.jpg"
+  },
+  {
+    "id": "9",
+    "nombre": "Dr. Martín Quispe",
+    "especialidad": "Ortodoncia",
+    "experiencia": "Atención integral adultos",
+    "img": "assets/img/doctor4.jpg"
+  },
+  {
+    "id": "10",
+    "nombre": "Dra. Paula Aguirre",
+    "especialidad": "Blanqueamiento",
+    "experiencia": "Especialista en niños y adolescentes",
+    "img": "assets/img/doctora4.avif"
+  }
+]
