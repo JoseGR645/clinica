@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clínica Sonrisas y Salud - Agendar Cita</title>
+<link rel="stylesheet" href="styles/principal.css" />
+</head>
+<body>
+<div class="container">
+  <div class="app-container">
+    <header class="header">
+      <div class="brand">
+        <div class="logo"><img src="assets/img/logo.png" alt="Logo clínica" onerror="this.style.display='none'"/></div>
+        <h1>Clínica Sonrisas y Salud</h1>
+      </div>
+      <nav class="navbar">
+        <button class="nav-btn active" onclick="showSection('home', this)">Inicio</button>
+        
+        <!-- Perfil de usuario -->
+        <div class="user-profile" id="userProfile" onclick="window.location.href='datos.html'">
+          <img src="" alt="Perfil" id="userAvatar" class="user-avatar">
+          <span class="user-name" id="userName">Usuario</span>
+        </div>
+        
+        <button id="themeToggle" class="theme-toggle" title="Modo noche" aria-label="Modo noche" onclick="toggleTheme()">
+          <span class="toggle-track">
+            <span class="toggle-thumb">
+              <span class="icon-sun"></span>
+              <span class="icon-moon"></span>
+            </span>
+          </span>
+        </button>
+      </nav>
+    </header>
+    <div class="main-grid">
+      <main>
+        <!-- HOME -->
+        <section id="home" class="panel">
+          <h2>Bienvenido/a</h2>
+          <p class="small">Agenda tus citas, consulta servicios y doctores, y recibe recordatorios automáticos.</p>
+          <div class="home-quickgrid">
+            <button class="quick-btn" onclick="showSection('agendar', this)">
+              <img src="assets/icons/calendar.svg" alt="Agendar cita" class="quick-icon"/>
+              <span>Agendar cita</span>
+            </button>
+            <button class="quick-btn" onclick="showSection('doctores', this)">
+              <img src="assets/icons/doctor.svg" alt="Doctores" class="quick-icon"/>
+              <span>Doctores</span>
+            </button>
+            <button class="quick-btn" onclick="showSection('servicios', this)">
+              <img src="assets/icons/service.svg" alt="Servicios" class="quick-icon"/>
+              <span>Servicios</span>
+            </button>
+            <button class="quick-btn" onclick="showSection('mis-citas', this)">
+              <img src="assets/icons/appointment.svg" alt="Mis citas" class="quick-icon"/>
+              <span>Mis citas</span>
+            </button>
+          </div>
+          <div class="home-panels-row">
+            <div class="panel info-panel">
+              <strong>Próxima cita:</strong><br>
+              <span id="proximaCita">No tienes citas próximas.</span>
+            </div>
+            <div class="panel info-panel">
+              <strong>Recordatorios activos:</strong><br>
+              <span style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                <img src="assets/icons/reminder-sms.svg" width="24" alt="SMS"/>
+                <img src="assets/icons/reminder-whatsapp.svg" width="24" alt="WhatsApp"/>
+                <img src="assets/icons/reminder-gmail.svg" width="24" alt="Gmail"/>
+                <span class="small">(Automáticos)</span>
+              </span>
+            </div>
+          </div>
+        </section>
+        <!-- AGENDAR -->
+        <section id="agendar" class="panel" style="display:none">
+          <h2>Agendar Nueva Cita</h2>
+          <form id="citaForm">
+            <div class="form-group">
+              <label for="nombrePaciente">Nombre completo *</label>
+              <input id="nombrePaciente" type="text" required placeholder="Ej: Ana Pérez">
+            </div>
+            <div class="form-group">
+              <label for="telefonoPaciente">Teléfono / WhatsApp *</label>
+              <input id="telefonoPaciente" type="tel" required placeholder="Ej: 987654321">
+            </div>
+            <div class="form-group">
+              <label for="emailPaciente">Correo electrónico</label>
+              <input id="emailPaciente" type="email" placeholder="ejemplo@correo.com">
+            </div>
+            <div class="form-group">
+              <label for="servicioSelect">Seleccionar servicio *</label>
+              <select id="servicioSelect" required>
+                <option value="">-- Seleccione --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="doctorSelect">Seleccionar doctor *</label>
+              <select id="doctorSelect" required>
+                <option value="">-- Seleccione --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Seleccione fecha *</label>
+              <div id="calendarDays" class="calendar-container" aria-live="polite"></div>
+            </div>
+            <div class="form-group">
+              <label>Seleccione horario *</label>
+              <div id="timeSlots" class="time-slots" aria-live="polite"></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button type="submit" class="btn-full">Confirmar y Agendar</button>
+            </div>
+          </form>
+        </section>
+        <!-- DOCTORES -->
+        <section id="doctores" class="panel" style="display:none">
+          <h2>Nuestro Equipo</h2>
+          <div class="doctores-grid" id="doctoresGrid"></div>
+        </section>
+        <!-- SERVICIOS -->
+        <section id="servicios" class="panel" style="display:none">
+          <h2>Servicios</h2>
+          <div class="services-grid" id="servicesGrid"></div>
+        </section>
+        <!-- MIS CITAS -->
+        <section id="mis-citas" class="panel" style="display:none">
+          <h2>Mis Citas</h2>
+          <div id="citasList" class="citas-list" aria-live="polite"></div>
+        </section>
+        <!-- CONFIRMACION -->
+        <section id="confirmacion" class="panel" style="display:none">
+          <div class="confirmation-box">
+            <h2>¡Cita agendada!</h2>
+            <div id="confirmationDetails" style="margin-top:12px;text-align:left"></div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn" onclick="showSection('mis-citas')">Ver mis citas</button>
+              <button class="btn alt" onclick="showSection('home')">Volver al inicio</button>
+            </div>
+          </div>
+        </section>
+      </main>
+      <!-- SIDEBAR -->
+      <aside>
+        <div class="sidebar-panel">
+          <h3>Contacto</h3>
+          <p class="small">Tel: <strong>01-234-5678</strong></p>
+          <p class="small">Correo: <strong>info@sonrisasysalud.pe</strong></p>
+        </div>
+        <div class="sidebar-panel">
+          <h3>Horarios</h3>
+          <p class="small">Lun - Vie • 08:00 - 17:00</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  
+  <script src="scripts/principal.js"></script>
+  <script>
+    function toggleTheme() {
+      const btn = document.getElementById('themeToggle');
+      const isNight = document.body.classList.toggle('night');
+      btn.classList.toggle('active', isNight);
+      localStorage.setItem('theme', isNight ? 'night' : 'light');
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('themeToggle');
+      const theme = localStorage.getItem('theme');
+      if(theme === 'night') {
+        document.body.classList.add('night');
+        btn.classList.add('active');
+      }
+    });
+  </script>
+</body>
+</html>
