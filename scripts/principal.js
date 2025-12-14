@@ -49,7 +49,7 @@ auth.onAuthStateChanged(async (user) => {
     await loadCitasFromFirestore();
   } else {
     // Reemplazar historial para evitar "volver" que reingresa a sesión
-    window.location.replace('login.html');
+    window.location.replace('index.html');
   }
 });
 

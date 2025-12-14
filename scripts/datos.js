@@ -28,7 +28,7 @@ auth.onAuthStateChanged(async (user) => {
         currentUser = user;
         await loadUserData(user);
     } else {
-        window.location.replace('login.html');
+        window.location.replace('index.html');
     }
 });
 
@@ -211,7 +211,7 @@ async function handleLogout() {
     try {
         await auth.signOut();
         // Reemplazar la entrada en el historial para evitar volver a sesión previa
-        window.location.replace('login.html');
+        window.location.replace('index.html');
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
         showMessage('Error al cerrar sesión', 'error');
