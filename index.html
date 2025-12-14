@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Clínica</title>
-    <link rel="stylesheet" href="styles/login.css"></head>
+    <link rel="stylesheet" href="/styles/login.css">
+</head>
 <body>
     <div class="login-wrapper">
         <!-- Botón de modo noche -->
@@ -121,8 +122,22 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
-    <!-- Script personalizado -->
-    <script src="scripts/login.js"></script>
+    <script src="/scripts/login.js"></script>
+    <script>
+        function toggleTheme() {
+            const btn = document.getElementById('themeToggle');
+            const isNight = document.body.classList.toggle('night');
+            btn.classList.toggle('active', isNight);
+            localStorage.setItem('theme', isNight ? 'night' : 'light');
+        }
+        window.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('themeToggle');
+            const theme = localStorage.getItem('theme');
+            if(theme === 'night') {
+                document.body.classList.add('night');
+                btn.classList.add('active');
+            }
+        });
+    </script>
 </body>
 </html>
