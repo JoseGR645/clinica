@@ -1,4 +1,3 @@
-// Configuración de Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBJP3WpBtEgUwE2fk_Qj-giOW1hi2HVgHw",
     authDomain: "clinica-d1868.firebaseapp.com",
@@ -9,14 +8,12 @@ const firebaseConfig = {
     measurementId: "G-E8Q0T5E033"
 };
 
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
 let isLogin = true;
 let isForgotPassword = false;
 
-// Mostrar/ocultar contraseña
 document.getElementById('togglePassword').addEventListener('click', function() {
     const passwordInput = document.getElementById('password');
     const eyeIcon = document.getElementById('eyeIcon');
@@ -30,14 +27,12 @@ document.getElementById('togglePassword').addEventListener('click', function() {
     }
 });
 
-// Mostrar formulario de recuperación de contraseña
 function showForgotPassword() {
     isForgotPassword = true;
     const nameGroup = document.getElementById('nameGroup');
     const passwordGroup = document.getElementById('passwordGroup');
     const formOptions = document.getElementById('formOptions');
     const formTitle = document.getElementById('formTitle');
-    const formSubtitle = document.getElementById('formSubtitle');
     const submitBtn = document.getElementById('submitBtn');
     const toggleText = document.getElementById('toggleText');
     const toggleBtn = document.getElementById('toggleBtn');
@@ -51,7 +46,6 @@ function showForgotPassword() {
     divider.classList.add('hidden');
     
     formTitle.textContent = 'Recuperar Contraseña';
-    formSubtitle.textContent = 'Ingresa tu correo para restablecer tu contraseña';
     submitBtn.textContent = 'Enviar correo de recuperación';
     toggleText.textContent = '¿Recordaste tu contraseña?';
     toggleBtn.textContent = 'Volver al login';
@@ -59,10 +53,8 @@ function showForgotPassword() {
     hideMessage();
 }
 
-// Toggle entre login y registro
 function toggleForm() {
     if (isForgotPassword) {
-        // Volver al login desde recuperación
         isForgotPassword = false;
         isLogin = true;
         
@@ -70,7 +62,6 @@ function toggleForm() {
         const passwordGroup = document.getElementById('passwordGroup');
         const formOptions = document.getElementById('formOptions');
         const formTitle = document.getElementById('formTitle');
-        const formSubtitle = document.getElementById('formSubtitle');
         const submitBtn = document.getElementById('submitBtn');
         const toggleText = document.getElementById('toggleText');
         const toggleBtn = document.getElementById('toggleBtn');
@@ -84,18 +75,15 @@ function toggleForm() {
         divider.classList.remove('hidden');
         
         formTitle.textContent = 'Iniciar Sesión';
-        formSubtitle.textContent = 'Accede a tu cuenta de paciente';
         submitBtn.textContent = 'Iniciar Sesión';
         toggleText.textContent = '¿No tienes una cuenta?';
         toggleBtn.textContent = 'Regístrate aquí';
     } else {
-        // Toggle normal entre login y registro
         isLogin = !isLogin;
         const nameGroup = document.getElementById('nameGroup');
         const passwordGroup = document.getElementById('passwordGroup');
         const formOptions = document.getElementById('formOptions');
         const formTitle = document.getElementById('formTitle');
-        const formSubtitle = document.getElementById('formSubtitle');
         const submitBtn = document.getElementById('submitBtn');
         const toggleText = document.getElementById('toggleText');
         const toggleBtn = document.getElementById('toggleBtn');
@@ -105,7 +93,6 @@ function toggleForm() {
             passwordGroup.classList.remove('hidden');
             formOptions.classList.remove('hidden');
             formTitle.textContent = 'Iniciar Sesión';
-            formSubtitle.textContent = 'Accede a tu cuenta de paciente';
             submitBtn.textContent = 'Iniciar Sesión';
             toggleText.textContent = '¿No tienes una cuenta?';
             toggleBtn.textContent = 'Regístrate aquí';
@@ -114,34 +101,29 @@ function toggleForm() {
             passwordGroup.classList.remove('hidden');
             formOptions.classList.add('hidden');
             formTitle.textContent = 'Crear Cuenta';
-            formSubtitle.textContent = 'Regístrate como nuevo paciente';
             submitBtn.textContent = 'Registrarse';
             toggleText.textContent = '¿Ya tienes una cuenta?';
             toggleBtn.textContent = 'Inicia sesión';
         }
     }
     
-    // Limpiar campos y mensajes
     document.getElementById('name').value = '';
     document.getElementById('email').value = '';
     document.getElementById('password').value = '';
     hideMessage();
 }
 
-// Mostrar mensaje
 function showMessage(text, type) {
     const message = document.getElementById('message');
     message.textContent = text;
     message.className = `message ${type} show`;
 }
 
-// Ocultar mensaje
 function hideMessage() {
     const message = document.getElementById('message');
     message.classList.remove('show');
 }
 
-// Deshabilitar/habilitar botones
 function setLoading(loading) {
     const submitBtn = document.getElementById('submitBtn');
     const googleBtn = document.getElementById('googleBtn');
@@ -155,13 +137,11 @@ function setLoading(loading) {
     }
 }
 
-// Autenticación con email y contraseña
 async function handleAuth() {
     const email = document.getElementById('email').value.trim();
     
     hideMessage();
     
-    // Recuperación de contraseña
     if (isForgotPassword) {
         if (!email) {
             showMessage('Por favor ingresa tu correo electrónico', 'error');
@@ -175,7 +155,7 @@ async function handleAuth() {
             showMessage('Se ha enviado un correo de recuperación. Revisa tu bandeja de entrada.', 'success');
             
             setTimeout(() => {
-                toggleForm(); // Volver al login
+                toggleForm();
             }, 3000);
         } catch (error) {
             console.error('Error:', error);
@@ -200,11 +180,9 @@ async function handleAuth() {
         return;
     }
     
-    // Login o registro normal
     const name = document.getElementById('name').value.trim();
     const password = document.getElementById('password').value;
     
-    // Validación
     if (!isLogin && !name) {
         showMessage('Por favor ingresa tu nombre', 'error');
         return;
@@ -224,23 +202,17 @@ async function handleAuth() {
     
     try {
         if (isLogin) {
-            // Login con Firebase
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            await auth.signInWithEmailAndPassword(email, password);
             showMessage('¡Inicio de sesión exitoso! Redirigiendo...', 'success');
-            console.log('Usuario logueado:', userCredential.user);
             
-            // Redirigir al dashboard (reemplaza historial)
             setTimeout(() => {
                 window.location.replace('principal.html');
             }, 1500);
         } else {
-            // Registro con Firebase
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             await userCredential.user.updateProfile({ displayName: name });
             showMessage('¡Registro exitoso! Bienvenido ' + name, 'success');
-            console.log('Usuario registrado:', userCredential.user);
             
-            // Redirigir al dashboard (reemplaza historial)
             setTimeout(() => {
                 window.location.replace('principal.html');
             }, 1500);
@@ -249,7 +221,6 @@ async function handleAuth() {
         console.error('Error:', error);
         let errorMessage = 'Error en la autenticación';
         
-        // Mensajes de error personalizados
         switch(error.code) {
             case 'auth/email-already-in-use':
                 errorMessage = 'Este correo ya está registrado';
@@ -282,18 +253,15 @@ async function handleAuth() {
     }
 }
 
-// Autenticación con Google
 async function handleGoogleAuth() {
     hideMessage();
     setLoading(true);
     
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
-        const result = await auth.signInWithPopup(provider);
+        await auth.signInWithPopup(provider);
         showMessage('¡Autenticación con Google exitosa! Redirigiendo...', 'success');
-        console.log('Usuario logueado con Google:', result.user);
         
-        // Redirigir al dashboard (reemplaza historial)
         setTimeout(() => {
             window.location.replace('principal.html');
         }, 1500);
@@ -306,7 +274,7 @@ async function handleGoogleAuth() {
         } else if (error.code === 'auth/popup-blocked') {
             errorMessage = 'Popup bloqueado. Permite popups para este sitio';
         } else if (error.code === 'auth/unauthorized-domain') {
-            errorMessage = 'Dominio no autorizado. Configura el dominio en Firebase Console';
+            errorMessage = 'Dominio no autorizado. Configura 127.0.0.1 y localhost en Firebase Console';
         }
         
         showMessage(errorMessage, 'error');
@@ -315,7 +283,6 @@ async function handleGoogleAuth() {
     }
 }
 
-// Permitir enter para enviar
 document.getElementById('password').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         handleAuth();
@@ -328,15 +295,8 @@ document.getElementById('email').addEventListener('keypress', function(e) {
     }
 });
 
-// Monitorear cambios en el estado de autenticación
 auth.onAuthStateChanged((user) => {
-    if (user) {
-        console.log('Usuario autenticado:', user);
-        // Redirigir al dashboard si ya está logueado
-        if (window.location.pathname.includes('principal.html') || window.location.pathname === '/') {
-            window.location.replace('principal.html');
-        }
-    } else {
-        console.log('Usuario no autenticado');
+    if (user && (window.location.pathname.includes('index.html') || window.location.pathname === '/' || window.location.pathname.includes('index.html'))) {
+        window.location.replace('principal.html');
     }
 });

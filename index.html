@@ -6,12 +6,20 @@
     <title>Login Clínica</title>
     <link rel="stylesheet" href="styles/login.css"></head>
 <body>
-    
     <div class="login-wrapper">
+        <!-- Botón de modo noche -->
+        <button id="themeToggle" class="theme-toggle-login" title="Modo noche" aria-label="Modo noche" onclick="toggleTheme()">
+            <span class="toggle-track">
+                <span class="toggle-thumb">
+                    <span class="icon-sun"></span>
+                    <span class="icon-moon"></span>
+                </span>
+            </span>
+        </button>
+
         <div class="container">
             <!-- Panel izquierdo decorativo -->
             <div class="left-panel">
-                <!-- Elementos decorativos -->
                 <div class="decoration circle-1"></div>
                 <div class="decoration circle-2"></div>
                 <div class="decoration circle-3"></div>
@@ -22,7 +30,6 @@
                 <div class="decoration border-circle-1"></div>
                 <div class="decoration border-circle-2"></div>
 
-                <!-- Contenido -->
                 <div class="left-content">
                     <h1>Bienvenido a la Clínica</h1>
                     <p>Tu salud es nuestra prioridad. Accede a tu cuenta para gestionar tus citas, consultar resultados médicos y mantenerte conectado con nuestros profesionales de la salud.</p>
@@ -32,7 +39,6 @@
             <!-- Panel derecho - Formulario -->
             <div class="right-panel">
                 <div class="form-container">
-                    <!-- Logo y título -->
                     <div class="logo-container">
                         <div class="logo">
                             <svg viewBox="0 0 24 24">
@@ -41,10 +47,9 @@
                         </div>
                         <h2 class="form-title" id="formTitle">Iniciar Sesión</h2>
                     </div>
-                    <!-- Mensajes -->
+
                     <div class="message" id="message"></div>
 
-                    <!-- Campo de nombre (solo registro) -->
                     <div class="form-group hidden" id="nameGroup">
                         <label for="name">Nombre completo</label>
                         <div class="input-wrapper">
@@ -55,7 +60,6 @@
                         </div>
                     </div>
 
-                    <!-- Campo de email -->
                     <div class="form-group">
                         <label for="email">Correo electrónico</label>
                         <div class="input-wrapper">
@@ -66,7 +70,6 @@
                         </div>
                     </div>
 
-                    <!-- Campo de contraseña -->
                     <div class="form-group" id="passwordGroup">
                         <label for="password">Contraseña</label>
                         <div class="input-wrapper">
@@ -83,7 +86,6 @@
                         </div>
                     </div>
 
-                    <!-- Recordarme y olvidaste contraseña (solo login) -->
                     <div class="form-options" id="formOptions">
                         <label class="checkbox-label">
                             <input type="checkbox" id="remember">
@@ -92,15 +94,12 @@
                         <button type="button" class="forgot-password" onclick="showForgotPassword()">¿Olvidaste tu contraseña?</button>
                     </div>
 
-                    <!-- Botón de submit -->
                     <button class="btn-primary" id="submitBtn" onclick="handleAuth()">Iniciar Sesión</button>
 
-                    <!-- Divider -->
                     <div class="divider">
                         <span>O continúa con</span>
                     </div>
 
-                    <!-- Botón de Google -->
                     <button class="btn-google" id="googleBtn" onclick="handleGoogleAuth()">
                         <svg width="20" height="20" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -111,7 +110,6 @@
                         Continuar con Google
                     </button>
 
-                    <!-- Toggle login/registro -->
                     <div class="toggle-form">
                         <span id="toggleText">¿No tienes una cuenta?</span>
                         <button onclick="toggleForm()" id="toggleBtn">Regístrate aquí</button>
@@ -121,11 +119,10 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <!-- Script personalizado -->
-    <script src="scripts/login.js"></script>
+    <script src="/scripts/login.js"></script>
 </body>
 </html>

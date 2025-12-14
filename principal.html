@@ -17,7 +17,6 @@
       <nav class="navbar">
         <button class="nav-btn active" onclick="showSection('home', this)">Inicio</button>
         
-        <!-- Perfil de usuario -->
         <div class="user-profile" id="userProfile" onclick="window.location.href='datos.html'">
           <img src="" alt="Perfil" id="userAvatar" class="user-avatar">
           <span class="user-name" id="userName">Usuario</span>
@@ -35,7 +34,6 @@
     </header>
     <div class="main-grid">
       <main>
-        <!-- HOME -->
         <section id="home" class="panel">
           <h2>Bienvenido/a</h2>
           <p class="small">Agenda tus citas, consulta servicios y doctores, y recibe recordatorios automáticos.</p>
@@ -73,7 +71,7 @@
             </div>
           </div>
         </section>
-        <!-- AGENDAR -->
+        
         <section id="agendar" class="panel" style="display:none">
           <h2>Agendar Nueva Cita</h2>
           <form id="citaForm">
@@ -83,7 +81,7 @@
             </div>
             <div class="form-group">
               <label for="telefonoPaciente">Teléfono / WhatsApp *</label>
-              <input id="telefonoPaciente" type="tel" required placeholder="Ej: 987654321">
+              <input id="telefonoPaciente" type="tel" required placeholder="Ej: +51 904 024 478">
             </div>
             <div class="form-group">
               <label for="emailPaciente">Correo electrónico</label>
@@ -114,22 +112,22 @@
             </div>
           </form>
         </section>
-        <!-- DOCTORES -->
+        
         <section id="doctores" class="panel" style="display:none">
           <h2>Nuestro Equipo</h2>
           <div class="doctores-grid" id="doctoresGrid"></div>
         </section>
-        <!-- SERVICIOS -->
+        
         <section id="servicios" class="panel" style="display:none">
           <h2>Servicios</h2>
           <div class="services-grid" id="servicesGrid"></div>
         </section>
-        <!-- MIS CITAS -->
+        
         <section id="mis-citas" class="panel" style="display:none">
           <h2>Mis Citas</h2>
           <div id="citasList" class="citas-list" aria-live="polite"></div>
         </section>
-        <!-- CONFIRMACION -->
+        
         <section id="confirmacion" class="panel" style="display:none">
           <div class="confirmation-box">
             <h2>¡Cita agendada!</h2>
@@ -141,7 +139,7 @@
           </div>
         </section>
       </main>
-      <!-- SIDEBAR -->
+      
       <aside>
         <div class="sidebar-panel">
           <h3>Contacto</h3>
@@ -156,12 +154,55 @@
     </div>
   </div>
   
-  <!-- Firebase SDK -->
+  <!-- Modal de recordatorios -->
+  <div id="reminderModal" class="modal" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Configurar Recordatorio</h3>
+        <button class="modal-close" onclick="closeReminderModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label style="font-weight:700;margin-bottom:10px;display:block">¿Cómo quieres que te recordemos?</label>
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+          <label class="reminder-option">
+            <input type="checkbox" id="reminderEmail" checked>
+            <span class="reminder-label">
+              <img src="assets/icons/reminder-gmail.svg" width="20" alt="Email"/>
+              Correo
+            </span>
+          </label>
+          <label class="reminder-option">
+            <input type="checkbox" id="reminderSMS">
+            <span class="reminder-label">
+              <img src="assets/icons/reminder-sms.svg" width="20" alt="SMS"/>
+              SMS
+            </span>
+          </label>
+          <label class="reminder-option">
+            <input type="checkbox" id="reminderWhatsApp">
+            <span class="reminder-label">
+              <img src="assets/icons/reminder-whatsapp.svg" width="20" alt="WhatsApp"/>
+              WhatsApp
+            </span>
+          </label>
+        </div>
+        
+        <label style="font-weight:700;margin-bottom:10px;display:block">¿Cuándo?</label>
+        <select id="reminderTime" class="reminder-time-select">
+          <option value="now">Ahora</option>
+          <option value="30" selected>30 minutos antes</option>
+          <option value="60">1 hora antes</option>
+          <option value="120">2 horas antes</option>
+        </select>
+        
+        <button class="btn-full" style="margin-top:20px" onclick="sendReminder()">Enviar Recordatorio</button>
+      </div>
+    </div>
+  </div>
+  
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   
   <script src="scripts/principal.js"></script>
   <script>

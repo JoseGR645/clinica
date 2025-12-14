@@ -1,4 +1,3 @@
-// Configuración de Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBJP3WpBtEgUwE2fk_Qj-giOW1hi2HVgHw",
     authDomain: "clinica-d1868.firebaseapp.com",
@@ -9,20 +8,14 @@ const firebaseConfig = {
     measurementId: "G-E8Q0T5E033"
 };
 
-// Inicializar Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const auth = firebase.auth();
 const storage = firebase.storage();
 
-// Firestore and functions
-const db = firebase.firestore();
-const functions = firebase.functions();
-
 let currentUser = null;
 
-// Verificar autenticación
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
@@ -32,7 +25,6 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-// Cargar datos del usuario
 async function loadUserData(user) {
     const displayNameInput = document.getElementById('displayName');
     const emailInput = document.getElementById('email');
@@ -41,35 +33,43 @@ async function loadUserData(user) {
     const birthdateInput = document.getElementById('birthdate');
     const profilePhoto = document.getElementById('profilePhoto');
     
-    // Cargar datos básicos de Firebase Auth y Firestore users/doc
     displayNameInput.value = user.displayName || '';
     emailInput.value = user.email || '';
-    try {
-        const doc = await db.collection('users').doc(user.uid).get();
-        const userData = doc.exists ? doc.data() : {};
-        phoneInput.value = userData.phone || '';
-        addressInput.value = userData.address || '';
-        birthdateInput.value = userData.birthdate || '';
-        if (userData.photoURL) {
-            profilePhoto.src = userData.photoURL;
-        } else if (user.photoURL) {
-            profilePhoto.src = user.photoURL;
-        } else {
-            setDefaultAvatar(profilePhoto);
+    
+    const userDataStr = localStorage.getItem('userData_' + user.uid);
+    if (userDataStr) {
+        try {
+            const userData = JSON.parse(userDataStr);
+            phoneInput.value = userData.phone || '';
+            addressInput.value = userData.address || '';
+            birthdateInput.value = userData.birthdate || '';
+            
+            if (userData.photoURL) {
+                profilePhoto.src = userData.photoURL;
+            } else if (user.photoURL) {
+                profilePhoto.src = user.photoURL;
+            } else {
+                setDefaultAvatar(profilePhoto);
+            }
+        } catch (e) {
+            console.error('Error cargando datos:', e);
+            if (user.photoURL) {
+                profilePhoto.src = user.photoURL;
+            } else {
+                setDefaultAvatar(profilePhoto);
+            }
         }
-    } catch (e) {
-        console.error('Error cargando datos desde Firestore:', e);
-        if (user.photoURL) profilePhoto.src = user.photoURL;
-        else setDefaultAvatar(profilePhoto);
+    } else if (user.photoURL) {
+        profilePhoto.src = user.photoURL;
+    } else {
+        setDefaultAvatar(profilePhoto);
     }
 }
 
-// Avatar predeterminado
 function setDefaultAvatar(imgElement) {
     imgElement.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230aa3a3"%3E%3Cpath d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/%3E%3C/svg%3E';
 }
 
-// Mostrar mensaje
 function showMessage(text, type) {
     const message = document.getElementById('message');
     message.textContent = text;
@@ -81,18 +81,15 @@ function showMessage(text, type) {
     }, 5000);
 }
 
-// Manejar cambio de foto
 async function handlePhotoChange(event) {
     const file = event.target.files[0];
     if (!file) return;
     
-    // Validar tamaño (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
         showMessage('La imagen es muy grande. Máximo 5MB', 'error');
         return;
     }
     
-    // Validar tipo
     if (!file.type.startsWith('image/')) {
         showMessage('Solo se permiten imágenes', 'error');
         return;
@@ -100,7 +97,6 @@ async function handlePhotoChange(event) {
     
     const profilePhoto = document.getElementById('profilePhoto');
     
-    // Mostrar preview inmediatamente
     const reader = new FileReader();
     reader.onload = (e) => {
         profilePhoto.src = e.target.result;
@@ -108,11 +104,18 @@ async function handlePhotoChange(event) {
     reader.readAsDataURL(file);
     
     try {
-        // Subir imagen a Firebase Storage y guardar URL en Firestore
-        const storageRef = storage.ref().child(`profiles/${currentUser.uid}`);
-        const uploadTask = await storageRef.put(file);
-        const downloadURL = await uploadTask.ref.getDownloadURL();
-        await db.collection('users').doc(currentUser.uid).set({ photoURL: downloadURL }, { merge: true });
+        const base64String = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+        
+        const userDataStr = localStorage.getItem('userData_' + currentUser.uid);
+        let userData = userDataStr ? JSON.parse(userDataStr) : {};
+        userData.photoURL = base64String;
+        localStorage.setItem('userData_' + currentUser.uid, JSON.stringify(userData));
+        
         showMessage('Foto actualizada correctamente', 'success');
     } catch (error) {
         console.error('Error al guardar foto:', error);
@@ -120,7 +123,6 @@ async function handlePhotoChange(event) {
     }
 }
 
-// Guardar perfil
 async function handleSaveProfile() {
     const displayName = document.getElementById('displayName').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -139,29 +141,29 @@ async function handleSaveProfile() {
     }
     
     try {
-        // Actualizar displayName en Firebase Auth
         await currentUser.updateProfile({
             displayName: displayName
         });
         
-        // Si el email cambió, actualizarlo
         if (email !== currentUser.email) {
             await currentUser.updateEmail(email);
             showMessage('Correo actualizado. Por favor verifica tu nuevo correo.', 'success');
         }
         
-        // Guardar datos adicionales en Firestore
-        await db.collection('users').doc(currentUser.uid).set({
-            phone: phone,
-            address: address,
-            birthdate: birthdate
-        }, { merge: true });
+        const userDataStr = localStorage.getItem('userData_' + currentUser.uid);
+        let userData = userDataStr ? JSON.parse(userDataStr) : {};
+        
+        userData.phone = phone;
+        userData.address = address;
+        userData.birthdate = birthdate;
+        
+        localStorage.setItem('userData_' + currentUser.uid, JSON.stringify(userData));
+        
         showMessage('Perfil actualizado correctamente', 'success');
         
-        // Recargar datos (o re-cargar perfil)
         setTimeout(() => {
             window.location.reload();
-        }, 1000);
+        }, 2000);
         
     } catch (error) {
         console.error('Error al guardar:', error);
@@ -185,7 +187,6 @@ async function handleSaveProfile() {
     }
 }
 
-// Cambiar contraseña
 async function handleChangePassword() {
     const email = currentUser.email;
     
@@ -202,7 +203,6 @@ async function handleChangePassword() {
     }
 }
 
-// Cerrar sesión
 async function handleLogout() {
     if (!confirm('¿Estás seguro que deseas cerrar sesión?')) {
         return;
@@ -210,7 +210,6 @@ async function handleLogout() {
     
     try {
         await auth.signOut();
-        // Reemplazar la entrada en el historial para evitar volver a sesión previa
         window.location.replace('index.html');
     } catch (error) {
         console.error('Error al cerrar sesión:', error);

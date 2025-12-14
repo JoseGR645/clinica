@@ -10,24 +10,32 @@
 <body>
     <div class="container">
         <div class="profile-container">
-            <!-- Header -->
             <div class="profile-header">
-                <button class="back-btn" onclick="window.location.href='principal.html'">
+                <button class="back-btn" onclick="goBack()">
                     <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                     Volver
                 </button>
                 <h1>Mi Perfil</h1>
-                <button class="logout-btn" onclick="handleLogout()">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                    Cerrar sesión
-                </button>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <button id="themeToggle" class="theme-toggle-datos" title="Modo noche" onclick="toggleTheme()">
+                        <span class="toggle-track">
+                            <span class="toggle-thumb">
+                                <span class="icon-sun"></span>
+                                <span class="icon-moon"></span>
+                            </span>
+                        </span>
+                    </button>
+                    <button class="logout-btn" onclick="handleLogout()">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        Cerrar sesión
+                    </button>
+                </div>
             </div>
 
-            <!-- Foto de perfil -->
             <div class="photo-section">
                 <div class="photo-wrapper">
                     <img src="" alt="Foto de perfil" id="profilePhoto" class="profile-photo">
@@ -42,10 +50,8 @@
                 <p class="photo-hint">Haz clic en el ícono para cambiar tu foto</p>
             </div>
 
-            <!-- Mensaje de estado -->
             <div class="message" id="message"></div>
 
-            <!-- Formulario de datos -->
             <div class="form-section">
                 <h2>Información Personal</h2>
                 
@@ -71,13 +77,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">Teléfono</label>
+                    <label for="phone">Teléfono / WhatsApp</label>
                     <div class="input-wrapper">
                         <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                         </svg>
-                        <input type="tel" id="phone" placeholder="987654321">
+                        <input type="tel" id="phone" placeholder="+51 904 024 478">
                     </div>
+                    <small class="hint">Importante para recordatorios por SMS y WhatsApp</small>
                 </div>
 
                 <div class="form-group">
@@ -109,7 +116,6 @@
                 </button>
             </div>
 
-            <!-- Sección de seguridad -->
             <div class="form-section">
                 <h2>Seguridad</h2>
                 
@@ -124,14 +130,10 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
     
-    <script src="scripts/datos.js"></script>
-
+    <script src="/scripts/datos.js"></script>
 </body>
 </html>

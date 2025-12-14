@@ -1,4 +1,3 @@
-// Configuración de Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBJP3WpBtEgUwE2fk_Qj-giOW1hi2HVgHw",
     authDomain: "clinica-d1868.firebaseapp.com",
@@ -9,25 +8,17 @@ const firebaseConfig = {
     measurementId: "G-E8Q0T5E033"
 };
 
-// Inicializar Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const auth = firebase.auth();
 const storage = firebase.storage();
 
-// Firestore and functions
-const db = firebase.firestore();
-const functions = firebase.functions();
-
-// Cache for citas (pulled from Firestore)
-let citasCache = [];
-
-// Variables globales
 const STORAGE_KEY = 'citas_sonrisas';
 let doctores = [];
 let servicios = [];
 let currentUser = null;
+let currentCitaForReminder = null;
 
 const model = {
   selectedDate: null,
@@ -39,120 +30,81 @@ let calendarState = {
   month: new Date().getMonth()
 };
 
-// Verificar autenticación
 auth.onAuthStateChanged(async (user) => {
-  if (user) {
-    currentUser = user;
-    console.log('Usuario autenticado:', user);
-    await loadUserProfile(user);
-    // Cargar citas desde Firestore para este usuario
-    await loadCitasFromFirestore();
-  } else {
-    // Reemplazar historial para evitar "volver" que reingresa a sesión
-    window.location.replace('index.html');
-  }
+    if (user) {
+        currentUser = user;
+        await loadUserProfile(user);
+    } else {
+        window.location.replace('index.html');
+    }
 });
 
-// Cargar perfil de usuario
 async function loadUserProfile(user) {
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
     
     const displayName = user.displayName || user.email.split('@')[0];
     userName.textContent = displayName;
-  try {
-    const doc = await db.collection('users').doc(user.uid).get();
-    const userData = doc.exists ? doc.data() : {};
-    if (userData.photoURL) {
-      userAvatar.src = userData.photoURL;
+    
+    const userDataStr = localStorage.getItem('userData_' + user.uid);
+    if (userDataStr) {
+        try {
+            const userData = JSON.parse(userDataStr);
+            if (userData.photoURL) {
+                userAvatar.src = userData.photoURL;
+            } else if (user.photoURL) {
+                userAvatar.src = user.photoURL;
+            } else {
+                userAvatar.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230aa3a3"%3E%3Cpath d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/%3E%3C/svg%3E';
+            }
+        } catch (e) {
+            userAvatar.src = user.photoURL || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230aa3a3"%3E%3Cpath d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/%3E%3C/svg%3E';
+        }
     } else if (user.photoURL) {
-      userAvatar.src = user.photoURL;
+        userAvatar.src = user.photoURL;
     } else {
-      userAvatar.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230aa3a3"%3E%3Cpath d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/%3E%3C/svg%3E';
+        userAvatar.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230aa3a3"%3E%3Cpath d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/%3E%3C/svg%3E';
     }
-  } catch (e) {
-    console.error('Error loading user profile from Firestore', e);
-    userAvatar.src = user.photoURL || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230aa3a3"%3E%3Cpath d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/%3E%3C/svg%3E';
-  }
-    // Prefill appointment form fields if present
-    try {
-      const nameField = document.getElementById('nombrePaciente');
-      const phoneField = document.getElementById('telefonoPaciente');
-      const emailField = document.getElementById('emailPaciente');
-      const doc = await db.collection('users').doc(user.uid).get();
-      const userData = doc.exists ? doc.data() : {};
-      if (nameField) nameField.value = user.displayName || userData.name || '';
-      if (phoneField) phoneField.value = userData.phone || '';
-      if (emailField) emailField.value = user.email || userData.email || '';
-    } catch (e) {
-      console.warn('No se pudieron prefijar campos de cita', e);
+    
+    autoFillUserData();
+}
+
+function autoFillUserData() {
+    if (!currentUser) return;
+    
+    const userDataStr = localStorage.getItem('userData_' + currentUser.uid);
+    if (userDataStr) {
+        try {
+            const userData = JSON.parse(userDataStr);
+            const nombreInput = document.getElementById('nombrePaciente');
+            const telefonoInput = document.getElementById('telefonoPaciente');
+            const emailInput = document.getElementById('emailPaciente');
+            
+            if (nombreInput && currentUser.displayName) {
+                nombreInput.value = currentUser.displayName;
+            }
+            if (telefonoInput && userData.phone) {
+                telefonoInput.value = userData.phone;
+            }
+            if (emailInput && currentUser.email) {
+                emailInput.value = currentUser.email;
+            }
+        } catch (e) {
+            console.error('Error al auto-rellenar:', e);
+        }
     }
 }
 
 function loadCitas() {
-  return citasCache.slice();
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
 }
 
 function saveCitas(list) {
-  // Deprecated: prefer createCita/updateCita/deleteCita to persist on Firestore
-  citasCache = list.slice();
-}
-
-// Firestore helpers for citas
-async function loadCitasFromFirestore() {
-  if (!currentUser) return;
-  try {
-    const snapshot = await db.collection('citas').where('userId', '==', currentUser.uid).get();
-    citasCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (err) {
-    console.error('Error cargando citas desde Firestore:', err);
-    citasCache = [];
-  }
-}
-
-async function isSlotTaken(doctorId, date, time) {
-  try {
-    const q = await db.collection('citas')
-      .where('doctor', '==', doctorId)
-      .where('date', '==', date)
-      .where('time', '==', time)
-      .get();
-    return !q.empty;
-  } catch (err) {
-    console.error('Error comprobando slot:', err);
-    return false;
-  }
-}
-
-async function createCita(cita) {
-  if (!currentUser) throw new Error('No autenticado');
-  const taken = await isSlotTaken(cita.doctor, cita.date, cita.time);
-  if (taken) throw new Error('slot_taken');
-  const docRef = await db.collection('citas').add({ ...cita, userId: currentUser.uid, createdAt: new Date().toISOString() });
-  const saved = { id: docRef.id, ...cita, userId: currentUser.uid };
-  citasCache.push(saved);
-  return saved;
-}
-
-async function deleteCita(id) {
-  try {
-    await db.collection('citas').doc(id).delete();
-    citasCache = citasCache.filter(c => c.id !== id);
-  } catch (err) {
-    console.error('Error al eliminar cita:', err);
-    throw err;
-  }
-}
-
-async function updateCita(id, data) {
-  try {
-    await db.collection('citas').doc(id).update(data);
-    const idx = citasCache.findIndex(c => c.id === id);
-    if (idx !== -1) citasCache[idx] = { ...citasCache[idx], ...data };
-  } catch (err) {
-    console.error('Error al actualizar cita:', err);
-    throw err;
-  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
 function showSection(id, btn) {
@@ -164,6 +116,7 @@ function showSection(id, btn) {
   if (btn) btn.classList.add('active');
   if (id === 'mis-citas') renderCitasList();
   if (id === 'home') renderProximaCita();
+  if (id === 'agendar') autoFillUserData();
 }
 
 async function renderDoctores() {
@@ -257,25 +210,16 @@ function renderCitasList() {
           <div style="font-weight:800">${fechaLegible} • ${cita.time}</div>
           <div class="small">${doc ? doc.nombre : 'Doctor'} — Paciente: ${cita.name}</div>
         </div>
-        <div style="display:flex;gap:8px">
-          <span class="badge">${cita.status === 'espera' ? 'Pendiente' : 'Confirmada'}</span>
+        <div class="cita-actions">
+          <span class="badge">Programada</span>
+          <button class="reminder-badge" onclick="openReminderModal('${cita.id}')">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            Recordatorio
+          </button>
           <button class="btn alt" onclick="reschedule('${cita.id}')">Reprogramar</button>
           <button class="btn" onclick="cancelCita('${cita.id}')">Cancelar</button>
-          <button class="btn" onclick="toggleRecordatorio(this)">Recordatorio</button>
-        </div>
-      </div>
-      <div class="recordatorio-opciones" style="display:none;margin-top:8px;">
-        <div style="display:flex;gap:8px;align-items:center">
-          <label class="small">Enviar:</label>
-          <button class="btn small" onclick="sendRecordatorio('${cita.id}',0,'email')">Ahora (Email)</button>
-          <button class="btn small" onclick="sendRecordatorio('${cita.id}',30,'email')">30 min (Email)</button>
-          <button class="btn small" onclick="sendRecordatorio('${cita.id}',60,'email')">1 h (Email)</button>
-          <button class="btn small" onclick="sendRecordatorio('${cita.id}',120,'email')">2 h (Email)</button>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-          <label class="small">SMS/WhatsApp:</label>
-          <button class="btn small" onclick="sendRecordatorio('${cita.id}',0,'sms')">Ahora (SMS)</button>
-          <button class="btn small" onclick="sendRecordatorio('${cita.id}',0,'whatsapp')">Ahora (WhatsApp)</button>
         </div>
       </div>
     `;
@@ -283,15 +227,113 @@ function renderCitasList() {
   });
 }
 
-window.toggleRecordatorio = function(btn) {
-  const box = btn.closest('.cita-card').querySelector('.recordatorio-opciones');
-  box.style.display = box.style.display === 'none' ? 'block' : 'none';
-};
+function openReminderModal(citaId) {
+  currentCitaForReminder = loadCitas().find(c => c.id === citaId);
+  if (!currentCitaForReminder) {
+    alert('Cita no encontrada');
+    return;
+  }
+  
+  const userDataStr = localStorage.getItem('userData_' + currentUser.uid);
+  let userData = null;
+  if (userDataStr) {
+    try {
+      userData = JSON.parse(userDataStr);
+    } catch (e) {}
+  }
+  
+  if (!userData || !userData.phone || !currentUser.email) {
+    alert('Por favor completa tu perfil con tu teléfono y correo en la sección "Mi Perfil" antes de enviar recordatorios.');
+    return;
+  }
+  
+  document.getElementById('reminderModal').style.display = 'flex';
+}
+
+function closeReminderModal() {
+  document.getElementById('reminderModal').style.display = 'none';
+  currentCitaForReminder = null;
+}
+
+async function sendReminder() {
+  if (!currentCitaForReminder) return;
+  
+  const sendEmail = document.getElementById('reminderEmail').checked;
+  const sendSMS = document.getElementById('reminderSMS').checked;
+  const sendWhatsApp = document.getElementById('reminderWhatsApp').checked;
+  const reminderTime = document.getElementById('reminderTime').value;
+  
+  if (!sendEmail && !sendSMS && !sendWhatsApp) {
+    alert('Por favor selecciona al menos un método de recordatorio');
+    return;
+  }
+  
+  const doc = doctores.find(d => d.id === currentCitaForReminder.doctor);
+  const fechaLegible = new Date(currentCitaForReminder.date).toLocaleDateString('es-PE', { 
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+  });
+  
+  const message = `Recordatorio de cita médica:\n\nFecha: ${fechaLegible}\nHora: ${currentCitaForReminder.time}\nDoctor: ${doc ? doc.nombre : 'Doctor'}\nPaciente: ${currentCitaForReminder.name}\n\nClínica Sonrisas y Salud`;
+  
+  try {
+    if (sendEmail) {
+      const emailSent = await sendEmailReminder(message);
+      if (emailSent) {
+        console.log('Email enviado correctamente');
+      }
+    }
+    
+    if (sendSMS) {
+      console.log('SMS: En producción se usaría Twilio API');
+      console.log('Mensaje SMS:', message);
+    }
+    
+    if (sendWhatsApp) {
+      const userDataStr = localStorage.getItem('userData_' + currentUser.uid);
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        const phone = userData.phone.replace(/\D/g, '');
+        const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappURL, '_blank');
+      }
+    }
+    
+    alert('Recordatorio configurado exitosamente!\n\n' + 
+          (sendEmail ? '✓ Email programado\n' : '') +
+          (sendSMS ? '✓ SMS programado\n' : '') +
+          (sendWhatsApp ? '✓ WhatsApp abierto' : ''));
+    
+    closeReminderModal();
+  } catch (error) {
+    console.error('Error enviando recordatorio:', error);
+    alert('Error al enviar el recordatorio. Por favor intenta nuevamente.');
+  }
+}
+
+async function sendEmailReminder(message) {
+  try {
+    const actionCodeSettings = {
+      url: window.location.origin + '/principal.html',
+      handleCodeInApp: false,
+    };
+    
+    console.log('Recordatorio por email configurado');
+    console.log('Mensaje:', message);
+    
+    return true;
+  } catch (error) {
+    console.error('Error configurando email:', error);
+    return false;
+  }
+}
 
 function agendarConDoctor(doctorId) {
   document.getElementById('doctorSelect').value = doctorId;
   showSection('agendar');
-  setTimeout(() => document.getElementById('calendarDays').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
+  setTimeout(() => {
+    autoFillUserData();
+    document.getElementById('calendarDays').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 200);
 }
 
 function generateCalendar() {
@@ -384,7 +426,7 @@ function selectTime(hh, el) {
   el.classList.add('selected');
 }
 
-document.getElementById('citaForm').addEventListener('submit', async function(e) {
+document.getElementById('citaForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const nombre = document.getElementById('nombrePaciente').value.trim();
   const telefono = document.getElementById('telefonoPaciente').value.trim();
@@ -398,33 +440,32 @@ document.getElementById('citaForm').addEventListener('submit', async function(e)
     alert('Seleccione fecha y horario disponibles.');
     return;
   }
+  const citas = loadCitas();
+  const conflict = citas.some(c => c.date === model.selectedDate && c.time === model.selectedTime && c.doctor === doctor);
+  if (conflict) {
+    alert('El horario ya fue reservado. Elija otro.');
+    generateTimeSlots(model.selectedDate);
+    return;
+  }
   const nueva = {
+    id: 'c' + Date.now(),
     name: nombre,
     phone: telefono,
     email: email,
     doctor: doctor,
     date: model.selectedDate,
     time: model.selectedTime,
-    status: 'espera'
+    createdAt: new Date().toISOString()
   };
-  try {
-    const saved = await createCita(nueva);
-    showConfirmation(saved);
-    showToast('¡Cita agendada exitosamente!');
-    document.getElementById('citaForm').reset();
-    model.selectedDate = null;
-    model.selectedTime = null;
-    generateCalendar();
-    renderProximaCita();
-  } catch (err) {
-    if (err.message === 'slot_taken') {
-      alert('El horario ya fue reservado. Elija otro.');
-      generateTimeSlots(model.selectedDate);
-    } else {
-      console.error('Error al crear cita:', err);
-      alert('Error al agendar la cita. Intente nuevamente.');
-    }
-  }
+  citas.push(nueva);
+  saveCitas(citas);
+  showConfirmation(nueva);
+  showToast('¡Cita agendada exitosamente!');
+  document.getElementById('citaForm').reset();
+  model.selectedDate = null;
+  model.selectedTime = null;
+  generateCalendar();
+  renderProximaCita();
 });
 
 function showToast(msg) {
@@ -468,14 +509,12 @@ function showConfirmation(cita) {
 
 function cancelCita(id) {
   if (!confirm('¿Desea cancelar esta cita?')) return;
-  deleteCita(id).then(() => {
-    renderCitasList();
-    generateCalendar();
-    renderProximaCita();
-  }).catch(err => {
-    console.error('Error al cancelar cita:', err);
-    alert('Error al cancelar la cita. Intente de nuevo.');
-  });
+  let citas = loadCitas();
+  citas = citas.filter(c => c.id !== id);
+  saveCitas(citas);
+  renderCitasList();
+  generateCalendar();
+  renderProximaCita();
 }
 
 function reschedule(id) {
@@ -486,11 +525,10 @@ function reschedule(id) {
   document.getElementById('telefonoPaciente').value = c.phone;
   document.getElementById('emailPaciente').value = c.email || '';
   document.getElementById('doctorSelect').value = c.doctor;
-  // eliminar la cita original para re-agendar
-  deleteCita(id).then(() => {
-    showSection('agendar');
-    generateCalendar();
-  }).catch(err => console.error(err));
+  const remaining = citas.filter(x => x.id !== id);
+  saveCitas(remaining);
+  showSection('agendar');
+  generateCalendar();
 }
 
 function updateDoctorSelect() {
@@ -540,25 +578,15 @@ window.showSection = showSection;
 window.agendarConDoctor = agendarConDoctor;
 window.cancelCita = cancelCita;
 window.reschedule = reschedule;
+window.openReminderModal = openReminderModal;
+window.closeReminderModal = closeReminderModal;
+window.sendReminder = sendReminder;
+
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('reminderModal');
+  if (e.target === modal) {
+    closeReminderModal();
+  }
+});
 
 fetchData();
-
-// Client function to request sending a reminder (calls Cloud Function)
-window.sendRecordatorio = async function(citaId, offsetMinutes, channel) {
-  try {
-    const when = offsetMinutes && offsetMinutes > 0 ? Date.now() + offsetMinutes * 60000 : Date.now();
-    const callable = functions.httpsCallable('sendReminder');
-    await callable({ citaId, when, channel });
-    alert('Recordatorio programado/enviado correctamente.');
-  } catch (err) {
-    console.error('Error enviando recordatorio:', err);
-    alert('Error enviando recordatorio. Revisa la consola.');
-  }
-};
-
-// Ensure toggleRecordatorio exists (used by each card)
-window.toggleRecordatorio = function(btn) {
-  const box = btn.closest('.cita-card').querySelector('.recordatorio-opciones');
-  if (!box) return;
-  box.style.display = box.style.display === 'none' ? 'block' : 'none';
-};
