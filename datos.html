@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Perfil - Clínica Sonrisas y Salud</title>
-    <link rel="stylesheet" href="styles/datos.css"></head>
-
+    <link rel="stylesheet" href="/styles/datos.css">
 </head>
 <body>
     <div class="container">
@@ -134,6 +133,26 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
-    <script src="scripts/datos.js"></script>
+    <script src="/scripts/datos.js"></script>
+    <script>
+        function toggleTheme() {
+            const btn = document.getElementById('themeToggle');
+            const isNight = document.body.classList.toggle('night');
+            btn.classList.toggle('active', isNight);
+            localStorage.setItem('theme', isNight ? 'night' : 'light');
+        }
+        window.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('themeToggle');
+            const theme = localStorage.getItem('theme');
+            if(theme === 'night') {
+                document.body.classList.add('night');
+                btn.classList.add('active');
+            }
+        });
+
+        function goBack() {
+            window.location.href = 'principal.html';
+        }
+    </script>
 </body>
 </html>
